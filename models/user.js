@@ -17,6 +17,13 @@ const userSchema = new mongoose.Schema({
   token: {
     type: String,
   },
+  otp  :{
+    type :String
+  },
+  verified : {
+    type : Boolean,
+    default : false
+  }
 });
 
 module.exports = mongoose.model("user", userSchema,'user');
