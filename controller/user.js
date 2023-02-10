@@ -22,7 +22,7 @@ module.exports = {
     }
     // ...................... setting otp..............................//
     let otp = Math.floor(1000 + Math.random() * 9000).toString();
-    
+    console.log(otp);
     // ......................seting up node mailaer.................//
     let mailTransporter = nodemailer.createTransport({
       service : "gmail",
@@ -31,7 +31,7 @@ module.exports = {
       },
       auth : {
         user : "jasirmbmb9118@gmail.com",
-        pass : "ixutiqltdualpaav"
+        pass : process.env.EMAIL_AUTH
       }
     }) 
     let details = {
