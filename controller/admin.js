@@ -16,7 +16,15 @@ module.exports = {
     if (admin) {
       console.log("admin here");
       if (await bcrypt.compare(password, admin.password)) {
-        res.status(200).json(admin);
+        const token = jwt.sign(
+          { admin_id : admin._id, type: "admin" },
+          
+          process.env.TOKEN_KEY,
+          {
+            expiresIn: "2h",
+          }
+        );
+        res.status(200).json({token});
       } else {
         res.status(401).send("invalid password");
       }
@@ -63,6 +71,20 @@ module.exports = {
   accessChange : async(req,res) => {
     doctorId = req.body.id
     const result = await doctorSchema.findById(doctorId);
+    result.access = !result.access
+    console.log(result.access); 
+    result.save()
+    res.status(200).json(result)
+  },
+  getUsers : async (req,res) => {
+    const Users = await userSchema.find({});
+
+    
+    res.status(200).json(Users);
+  },
+  userAccessChange: async(req,res) => {
+    userId = req.body.id
+    const result = await userSchema.findById(userId);
     result.access = !result.access
     console.log(result.access);
     result.save()

@@ -3,6 +3,7 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const mongoose = require("mongoose");
 const session = require('express-session')
+const stripe = require('stripe')('sk_test_51McR2MSACriAWWdeBjDXkW9S6TZx07NvcxZUORdV8GWtAa7IgkJM5Jvlib0CaGtLi0OEDeYp23gKtwbCiu9nqyt1006ukl4A89')
 const app = express()
 
 
