@@ -1,9 +1,14 @@
 const { router } = require("../server");
+const fs = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userSchema = require("../models/user.js");
 const doctorSchema = require("../models/doctor");
 const appointmentSchema = require("../models/appointment");
+const doctorScheduleSchema = require("../models/doctorSchedule");
+const recordSchema = require("../models/records");
+const chatSchema = require("../models/chat");
+const messageSchema = require("../models/messages");
 const nodemailer = require("nodemailer");
 const stripe = require("stripe")(
   "sk_test_51McR2MSACriAWWdeBjDXkW9S6TZx07NvcxZUORdV8GWtAa7IgkJM5Jvlib0CaGtLi0OEDeYp23gKtwbCiu9nqyt1006ukl4A89"
@@ -108,7 +113,7 @@ module.exports = {
     let enteredOtp = data.otp1 + data.otp2 + data.otp3 + data.otp4;
     console.log(enteredOtp);
     const user = await userSchema.findOne({ _id: userId });
-    realOtp = user.otp;
+    realOtp;
     if (enteredOtp === realOtp) {
       res.status(200).json("otp verification success");
       user.verified = true;
@@ -126,7 +131,7 @@ module.exports = {
   getDoctor: async (req, res) => {
     doctorId = req.query.value;
     doctor = await doctorSchema.findById(doctorId);
-    console.log(doctor);
+    // console.log(doctor);
     res.status(200).json(doctor);
   },
   checkout: async (req, res) => {
@@ -170,6 +175,7 @@ module.exports = {
   },
   createOrder: async (req, res) => {
     const { doctorId, token, date, time } = req.body;
+    console.log(date);
     const decodedUser = jwt.verify(token, process.env.TOKEN_KEY);
     let userId = decodedUser["user_id"];
     const formattedDate = date.substring(0, 10);
@@ -179,34 +185,39 @@ module.exports = {
     const Appointmnet = await appointmentSchema.create({
       userId,
       doctorId,
-      date:formattedDate,
+      date: formattedDate,
       time,
-      fee : 200,
-      status : "Placed"
-
+      fee: 200,
+      status: "Pending",
     });
-    Appointmnet.save()
-    res.status(200).json("booking success")
+    Appointmnet.save();
+    res.status(200).json("booking success");
   },
-  slotcheck : async(req,res) => {
-    const { doctorId,date } = req.body;
+  slotcheck: async (req, res) => {
+    const { doctorId, date } = req.body;
     console.log(date);
     const formattedDate = date.substring(0, 10);
-     const times = await appointmentSchema.find({ doctorId: doctorId, date: formattedDate }).distinct('time')
-     
-      
-    console.log(times);
-  
-    res.status(200).json(times)
+    const times = await appointmentSchema
+      .find({ doctorId: doctorId, date: formattedDate })
+      .distinct("time");
+    const unAvailable = await doctorScheduleSchema
+      .find({
+        doctorId: doctorId,
+        date: formattedDate,
+      })
+      .distinct("time");
 
+    console.log(times);
+
+    res.status(200).json({ times, unAvailable });
   },
-  resendOtp : async (req,res) => {
-    token = req.body.token
+  resendOtp: async (req, res) => {
+    token = req.body.token;
     console.log(req.body);
     const decodedUser = jwt.verify(token, process.env.TOKEN_KEY);
     let userId = decodedUser["user_id"];
     const user = await userSchema.findOne({ _id: userId });
-    email =  user.email
+    email = user.email;
     let otp = Math.floor(1000 + Math.random() * 9000).toString();
     console.log(otp);
     // ......................seting up node mailaer.................//
@@ -233,10 +244,215 @@ module.exports = {
         console.log("mail has been sended");
       }
     });
-   
-    user.otp = otp
-    user.save()
-    res.status(200).json("otp send success")
 
-  }
+    user.otp = otp;
+    user.save();
+    res.status(200).json("otp send success");
+  },
+  getAppointments: async (req, res) => {
+    try {
+      const token = req.headers["authorization"].split(" ")[1];
+      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+      userId = decoded.user_id;
+      const appointments = await appointmentSchema
+        .find({ userId: userId })
+        .populate("doctorId");
+      res.status(200).json(appointments);
+    } catch (error) {
+      res.status(401);
+    }
+  },
+  cancelAppointment: async (req, res) => {
+    try {
+      console.log(req.body);
+
+      const appointment = await appointmentSchema.findById(req.body.id);
+      appointment.status = "Cancelled";
+      appointment.save();
+      res.status(200).json(appointment);
+    } catch (error) {
+      res.status(401);
+    }
+  },
+  upload: async (req, res) => {
+    try {
+      console.log(req.body);
+      console.log(req.file);
+      const token = req.headers["authorization"].split(" ")[1];
+      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+      userId = decoded.user_id;
+      const alreadyExist = await recordSchema.findOne({ userId: userId });
+      if (alreadyExist === null) {
+        const record = await recordSchema.create({
+          userId: userId,
+          fileName: req.file.originalname,
+          path: req.file.path,
+        });
+        record.save();
+        res.status(200).json("record uploaded succesfully");
+      } else {
+        alreadyExist.fileName.push(req.file.originalname);
+        alreadyExist.path.push(req.file.path);
+        alreadyExist.save();
+        res.status(200).json("record uploaded succesfully");
+      }
+    } catch (error) {
+      res.status(401).json(error);
+    }
+  },
+  getRecords: async (req, res) => {
+    try {
+      const token = req.headers["authorization"].split(" ")[1];
+      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+      userId = decoded.user_id;
+      const records = await recordSchema.findOne({ userId: userId });
+      res.status(200).json(records);
+    } catch (error) {
+      res.status(401).json(error);
+    }
+  },
+  removeRecords: async (req, res) => {
+    try {
+      console.log(req.body);
+      const selectpath = req.body.path;
+      fs.unlink(selectpath, (err) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+      });
+      const token = req.headers["authorization"].split(" ")[1];
+      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+      userId = decoded.user_id;
+      const records = await recordSchema.findOne({ userId: userId });
+      if (records.path.includes(selectpath)) {
+        console.log("path is here");
+        await recordSchema.updateOne(
+          { _id: records._id },
+          { $pull: { path: selectpath } }
+        );
+      }
+      res.status(200).json("done");
+    } catch (error) {
+      res.status(401).json(error);
+    }
+  },
+  onlineDoctor: async (req, res) => {
+    try {
+      const onlineDoctor = await doctorSchema.find({ active: true });
+      res.status(200).json(onlineDoctor);
+    } catch (error) {
+      res.status(401);
+    }
+  },
+  getUserId: (req, res) => {
+    try {
+      const role = req.url;
+      console.log(role);
+      const token = req.headers["authorization"].split(" ")[1];
+      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+      userId = decoded.user_id;
+      res.status(200).json(userId);
+    } catch (error) {
+      console.log(error);
+      res.status(401);
+    }
+  },
+  chatConnection: async (req, res) => {
+    try {
+      console.log(req.body);
+      let senderId = req.body.userId;
+      let receiverId = req.body.id;
+      const existChat = await chatSchema.find();
+      console.log(existChat);
+      console.log(receiverId);
+      if (existChat.length != 0) {
+        for (let i = 0; i < existChat.length; i++) {
+          const ids = existChat[i].members;
+          console.log(ids.includes(senderId && receiverId));
+          if (ids.includes(senderId && receiverId)) {
+            console.log("chat is already exist");
+          } else {
+            console.log("new chst");
+            const chat = await chatSchema.create({
+              members: [senderId, receiverId],
+            });
+            chat.save();
+            console.log(chat);
+          }
+        }
+      } else {
+        console.log("new chst");
+        const chat = await chatSchema.create({
+          members: [senderId, receiverId],
+        });
+        chat.save();
+        console.log(chat);
+      }
+      res.status(200).json("success");
+    } catch (error) {
+      console.log(error);
+      res.status(400).json("error");
+    }
+  },
+  newMsg: async (req, res) => {
+    try {
+      console.log(req.body);
+      const senderId = req.body.senderId;
+      const recieverId = req.body.receiverId;
+      const messages = req.body.messages;
+      console.log(req.body);
+      const connection = await chatSchema.findOne({
+        $and: [{ userid: senderId }, { userid: recieverId }],
+      });
+      console.log(connection);
+      const chatId = connection._id;
+      // const oldMessage = await messageSchema.findOne({
+      //   $and: [{ chatId }, { senderId }],
+      // });
+      // if (oldMessage) {
+      //   console.log("already had chat");
+      //   oldMessage.messages.push(message);
+      //   console.log(oldMessage);
+      //   oldMessage.save()
+      // } else {
+      const messageDocument = await messageSchema.create({
+        chatId,
+        senderId,
+        recieverId,
+        messages: messages,
+      });
+      messageDocument.save();
+      console.log("new created");
+      // }
+      res.status(200).json("success");
+    } catch (error) {
+      console.log(error);
+      res.status(400).json("error");
+    }
+  },
+  getMessages: async (req, res) => {
+    try {
+      console.log(req.body);
+     
+      const { senderId, receiverId } = req.body;
+      const chat = await chatSchema.findOne({
+        $and: [{ receiverId }, { senderId }],
+      });
+      const chatId = chat._id
+      const allChats = await messageSchema.find({chatId})
+      // const reciever = await userSchema.findById(receiverId)
+      // if(!reciever){
+      //   const reciever = await doctorSchema.findById(receiverId)
+      //   res.status(200).json({allChats,reciever});
+      // }else{
+        res.status(200).json(allChats);
+      
+      // console.log(allChats);
+      
+    } catch (error) {
+      console.log(error);
+      res.status(401).json("failed");
+    }
+  },
 };

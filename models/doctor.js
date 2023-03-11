@@ -48,6 +48,11 @@ const doctorSchema = new mongoose.Schema({
     default:true
     
   },
+  active: {
+    type: Boolean,
+    default:false
+    
+  },
 });
 
 module.exports = mongoose.model("doctor", doctorSchema,'doctor');

@@ -17,14 +17,14 @@ module.exports = {
       console.log("admin here");
       if (await bcrypt.compare(password, admin.password)) {
         const token = jwt.sign(
-          { admin_id : admin._id, type: "admin" },
-          
+          { admin_id: admin._id, type: "admin" },
+
           process.env.TOKEN_KEY,
           {
             expiresIn: "2h",
           }
         );
-        res.status(200).json({token});
+        res.status(200).json({ token });
       } else {
         res.status(401).send("invalid password");
       }
@@ -34,9 +34,12 @@ module.exports = {
     }
   },
   getDoctors: async (req, res) => {
-    const pendingDoctors = await doctorSchema.find({ approved: false , access : true });
+    const pendingDoctors = await doctorSchema.find({
+      approved: false,
+      access: true,
+    });
 
-    const allDoctors = await doctorSchema.find({approved: true});
+    const allDoctors = await doctorSchema.find({ approved: true });
 
     const result = { pendingDoctors, allDoctors };
     res.status(200).json(result);
@@ -66,28 +69,26 @@ module.exports = {
       console.log(result);
       res.status(200).send(result);
     }
-    
   },
-  accessChange : async(req,res) => {
-    doctorId = req.body.id
+  accessChange: async (req, res) => {
+    doctorId = req.body.id;
     const result = await doctorSchema.findById(doctorId);
-    result.access = !result.access
-    console.log(result.access); 
-    result.save()
-    res.status(200).json(result)
+    result.access = !result.access;
+    console.log(result.access);
+    result.save();
+    res.status(200).json(result);
   },
-  getUsers : async (req,res) => {
+  getUsers: async (req, res) => {
     const Users = await userSchema.find({});
 
-    
     res.status(200).json(Users);
   },
-  userAccessChange: async(req,res) => {
-    userId = req.body.id
+  userAccessChange: async (req, res) => {
+    userId = req.body.id;
     const result = await userSchema.findById(userId);
-    result.access = !result.access
+    result.access = !result.access;
     console.log(result.access);
-    result.save()
-    res.status(200).json(result)
-  }
+    result.save();
+    res.status(200).json(result);
+  },
 };
