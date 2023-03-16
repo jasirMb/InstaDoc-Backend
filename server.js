@@ -8,9 +8,9 @@ const session = require('express-session')
 const stripe = require('stripe')('sk_test_51McR2MSACriAWWdeBjDXkW9S6TZx07NvcxZUORdV8GWtAa7IgkJM5Jvlib0CaGtLi0OEDeYp23gKtwbCiu9nqyt1006ukl4A89')
 const app = express()
 
-const userRouter = require("./routes/user");
-const doctorRouter = require("./routes/doctor.js");
-const adminRouter = require("./routes/admin.js");
+const userRouter = require("./Routes/user.js");
+const doctorRouter = require("./Routes/doctor.js");
+const adminRouter = require("./Routes/admin.js");
 
 require('dotenv').config();
 app.use(session({ secret: "Key", cookie: { maxAge: 60000 * 60 } }))
