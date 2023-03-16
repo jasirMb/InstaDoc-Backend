@@ -18,7 +18,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
 let corsOption = {
-    origin: "http://localhost:4200",
+    origin: ["http://localhost:4200","https://instadoc.humen.online","https://www.instadoc.humen.online"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   };
 app.use(cors(corsOption))
