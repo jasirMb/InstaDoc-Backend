@@ -307,20 +307,19 @@ module.exports = {
       res.status(200).send(result);
     }
   },
-  logout: async(req, res) => {
+  logout: async (req, res) => {
     try {
       console.log("logoutttttttttttttttttttttttttttttttttttt");
       const token = req.headers["authorization"].split(" ")[1];
       const decoded = jwt.verify(token, process.env.TOKEN_KEY);
       const doctorId = mongoose.Types.ObjectId(decoded.doctor_id);
       console.log(doctorId);
-      const doctor = await doctorSchema.findOneAndUpdate( doctorId, {
-        active: false},
-       
-      );
+      const doctor = await doctorSchema.findOneAndUpdate(doctorId, {
+        active: false,
+      });
       console.log(doctor);
       // doctor.save()
-     
+
       console.log("kjhgfghjk");
       res.status(200).json("success");
     } catch (error) {

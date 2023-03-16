@@ -10,6 +10,8 @@ router.put("/doctors/status",verifyToken,adminControls.statusChange)
 router.patch("/doctors/access",verifyToken,adminControls.accessChange)
 router.get("/users",verifyToken,adminControls.getUsers)
 router.patch("/users/access",verifyToken,adminControls.userAccessChange)
+router.get("/details",verifyToken,adminControls.getDetails)
+router.get("/graph",verifyToken,adminControls.getGraphDetails)
 
 
 module.exports = router;

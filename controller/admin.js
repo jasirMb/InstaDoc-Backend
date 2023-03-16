@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const adminSchema = require("../models/admin");
 const userSchema = require("../models/user");
 const doctorSchema = require("../models/doctor");
+const appointmentSchema = require("../models/appointment");
+const { use } = require("../routes/doctor");
 
 module.exports = {
   postLogin: async (req, res) => {
@@ -84,11 +86,85 @@ module.exports = {
     res.status(200).json(Users);
   },
   userAccessChange: async (req, res) => {
-    userId = req.body.id;
-    const result = await userSchema.findById(userId);
-    result.access = !result.access;
-    console.log(result.access);
-    result.save();
-    res.status(200).json(result);
+    try {
+      userId = req.body.id;
+      const result = await userSchema.findById(userId);
+      result.access = !result.access;
+      console.log(result.access);
+      result.save();
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(401).json(error);
+    }
+  },
+  getDetails: async (req, res) => {
+    try {
+      console.log("backkkkkkk");
+      const users = await userSchema.find().count();
+      const doctors = await doctorSchema.find().count();
+      const appointments = await appointmentSchema.find().count();
+      const cancelled = await appointmentSchema
+        .find({ status: "Cancelled" })
+        .count();
+      let data = {
+        users,
+        doctors,
+        appointments,
+        cancelled,
+      };
+      res.status(200).json(data);
+    } catch (error) {}
+  },
+  getGraphDetails: async (req, res) => {
+    try {
+      let data = await appointmentSchema
+      .aggregate([
+        // Convert the date string to an actual date
+        {
+          $addFields: {
+            appointmentDate: { $toDate: "$date" },
+          },
+        },
+        // Group appointments by week and count the number of documents in each week
+        {
+          $group: {
+            _id: {
+              $let: {
+                vars: {
+                  startDate: {
+                    $subtract: [
+                      "$appointmentDate",
+                      {
+                        $multiply: [
+                          { $dayOfWeek: "$appointmentDate" },
+                          86400000,
+                        ],
+                      },
+                    ],
+                  },
+                },
+                in: {
+                  startOfWeek: {
+                    $dateToString: { format: "%Y-%m-%d", date: "$$startDate" },
+                  },
+                },
+              },
+            },
+            count: { $sum: 1 },
+          },
+        },
+        // Sort the results by start of week in ascending order
+        { $sort: { "_id.startOfWeek": 1 } },
+      ])
+      .exec();
+    let status =await appointmentSchema
+      .aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }])
+      .exec();
+      console.log(status);
+    res.status(200).json({ data, status });
+    } catch (error) {
+      console.log(error);
+    }
+    
   },
 };

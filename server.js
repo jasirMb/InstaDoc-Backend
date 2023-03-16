@@ -31,7 +31,7 @@ mongoose.connect(process.env.CONNECTION_STRING).then(() => {
 })
 mongoose.set('strictQuery', true);
 // route paths
-const userRouter = require("./routes/user.js");
+const userRouter = require("./routes/user");
 const doctorRouter = require("./routes/doctor.js");
 const adminRouter = require("./routes/admin.js");
 // ....multer
