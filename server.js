@@ -22,8 +22,8 @@ let corsOption = {
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   };
 app.use(cors(corsOption))
-app.use(express.static(path.join(__dirname, 'public')))
-app.use('/public', express.static('public'))
+// app.use(express.static(path.join(__dirname, 'public')))
+// app.use('/public', express.static('public'))
 app.listen(process.env.PORT,function(){
     console.log('server running'+process.env.PORT);
 })
