@@ -5,7 +5,7 @@ const adminSchema = require("../models/admin");
 const userSchema = require("../models/user");
 const doctorSchema = require("../models/doctor");
 const appointmentSchema = require("../models/appointment");
-const { use } = require("../routes/doctor");
+const { use } = require("../Routes/doctor.js");
 
 module.exports = {
   postLogin: async (req, res) => {
