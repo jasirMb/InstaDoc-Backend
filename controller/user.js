@@ -289,14 +289,15 @@ module.exports = {
           path: req.file.path,
         });
         record.save();
-        res.status(200).json("record uploaded succesfully");
+        res.status(200).json(record);
       } else {
         alreadyExist.fileName.push(req.file.originalname);
         alreadyExist.path.push(req.file.path);
         alreadyExist.save();
-        res.status(200).json("record uploaded succesfully");
+        res.status(200).json(alreadyExist);
       }
     } catch (error) {
+    console.log(error);
       res.status(401).json(error);
     }
   },
@@ -332,7 +333,7 @@ module.exports = {
           { $pull: { path: selectpath } }
         );
       }
-      res.status(200).json("done");
+      res.status(200).json(records);
     } catch (error) {
       res.status(401).json(error);
     }
@@ -455,4 +456,31 @@ module.exports = {
       res.status(401).json("failed");
     }
   },
+  getName :async (req,res) => {
+    const id = req.params.id
+    let recieverName;
+    let user = await userSchema.findById(id)
+    if(user){
+     recieverName = user.username
+    }else{
+      console.log("its dcitr");
+    let doctor = await doctorSchema.findById(id)
+     recieverName = doctor.doctorName
+    }
+
+    res.status(200).json(recieverName)
+  },
+  userDetails : async (req,res) => {
+    try {
+      const token = req.headers["authorization"].split(" ")[1];
+      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+      let userId = decoded.user_id;
+      const user = await userSchema.findById(userId)
+      res.status(200).json(user)
+    } catch (error) {
+      res.status(500)
+    }
+  
+
+  }
 };

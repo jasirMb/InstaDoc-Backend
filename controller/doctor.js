@@ -230,7 +230,11 @@ module.exports = {
       const decoded = jwt.verify(token, process.env.TOKEN_KEY);
       const doctorId = decoded.doctor_id;
       const doctor = await doctorSchema.findOne({ _id: doctorId });
-      res.status(200).json(doctor);
+      const bookings = await appointmentSchema.find({ doctorId: doctorId }).count()
+      const patient = await appointmentSchema.find({ doctorId: doctorId }).distinct("userId")
+      patientCount = patient.length
+      console.log(patientCount)
+      res.status(200).json({doctor,bookings,patientCount});
     } catch (error) {
       console.log(error);
     }
@@ -306,6 +310,24 @@ module.exports = {
       console.log(result);
       res.status(200).send(result);
     }
+  },
+  profileImage :async (req,res) =>{
+    try {
+      console.log(req.file);
+    const token = req.headers["authorization"].split(" ")[1];
+      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+      const doctorId = mongoose.Types.ObjectId(decoded.doctor_id);
+      console.log(doctorId);
+      let doctor = await doctorSchema.findById(doctorId)
+      doctor.image = req.file.path
+      doctor.save()
+      res.status(200).json("success")
+
+    } catch (error) {
+      console.log(error);
+      res.status(400)
+    }
+    
   },
   logout: async (req, res) => {
     try {

@@ -25,6 +25,8 @@ router.get("/user-id",verifyToken,isBlocked,userControls.getUserId)
 router.post("/chatConnection",verifyToken,isBlocked,userControls.chatConnection)
 router.post("/newMsg",verifyToken,isBlocked,userControls.newMsg)
 router.post("/allMessages",verifyToken,isBlocked,userControls.getMessages)
+router.get("/getname/:id",userControls.getName)
+router.get("/userdetails",verifyToken,isBlocked,userControls.userDetails)
 
 
 

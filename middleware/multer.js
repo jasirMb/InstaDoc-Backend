@@ -6,10 +6,13 @@ const storage = multer.diskStorage({
     cb(null, 'public/records')
   },
   filename: function (req, file, cb) {
+    console.log(file);
     const ext = file.originalname.substring(
       file.originalname.lastIndexOf('.')
+      
     )
-    cb(null,  file.fieldname + '-' + Date.now() + ext)
+    console.log(ext);
+    cb(null,  file.originalname + '-' + Date.now() + ext)
   }
 });
 

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const doctorControls = require("../controller/doctor");
 const verifyToken = require("../middleware/authentication");
+const upload = require("../middleware/multer")
 
 router.post("/register", doctorControls.postRegister);
 router.post("/login", doctorControls.postLogin);
@@ -14,4 +15,5 @@ router.get("/doctor-profile",doctorControls.doctorDetails)
 router.get("/patients",doctorControls.allPatients)
 router.put("/appointment/status",verifyToken,doctorControls.statusChange)
 router.patch("/logout",verifyToken,doctorControls.logout)
+router.post("/propic",verifyToken,upload.single('file'),doctorControls.profileImage)
 module.exports = router;

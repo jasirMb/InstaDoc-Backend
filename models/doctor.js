@@ -48,6 +48,9 @@ const doctorSchema = new mongoose.Schema({
     default:true
     
   },
+  image : {
+    type : String
+  },
   active: {
     type: Boolean,
     default:false
